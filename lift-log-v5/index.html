@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lift Log">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="src/css/app.css">
+  <title>Lift Log</title>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div>
+      <h1>Lift Log</h1>
+      <p>Athletic Strength · Bench Priority</p>
+    </div>
+    <div class="top-actions">
+      <span id="onlineStatus" class="status">Checking…</span>
+      <button id="themeToggle" class="icon-btn" aria-label="Toggle dark mode">☾</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="todayView" class="view">
+      <div id="installCard" class="card install-card hidden">
+        <div><span class="eyebrow">Installable PWA</span><h2>Keep Lift Log on your home screen</h2><p class="muted">Works offline and opens like an app.</p></div>
+        <button id="installBtn" class="btn primary">Install</button>
+      </div>
+      <div class="card hero">
+        <div>
+          <span class="eyebrow">Primary target</span>
+          <h2>Bench 160 lb × 10 × 3</h2>
+          <p id="goalStatus" class="muted"></p>
+        </div>
+        <div class="goal-ring" id="goalRing"><strong>0%</strong><span>goal</span></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div><span class="eyebrow">Up next</span><h2 id="nextWorkoutTitle">Workout</h2></div><span id="nextWorkoutBadge" class="pill">Core</span></div>
+        <div id="nextWorkoutSummary"></div>
+        <button id="startToday" class="btn primary jumbo">Start workout</button>
+      </div>
+      <div id="readinessCard" class="card">
+        <div class="section-head"><h2>Readiness</h2><span class="muted small">Optional</span></div>
+        <div class="readiness-grid">
+          <label>Energy<select id="energy"><option value="3">Normal</option><option value="4">High</option><option value="2">Low</option><option value="1">Very low</option></select></label>
+          <label>Soreness<select id="soreness"><option value="1">Low</option><option value="2">Moderate</option><option value="3">High</option></select></label>
+        </div>
+      </div>
+      <div class="metric-grid" id="dashboardMetrics"></div>
+      <div class="card coach-card"><div class="section-head"><div><span class="eyebrow">Coach</span><h2>This week</h2></div><span id="coachBadge" class="pill">On track</span></div><p id="coachNote" class="coach-note"></p></div>
+      <div class="card bodyweight-card"><div class="section-head"><div><span class="eyebrow">Bodyweight</span><h2>Track strength relative to size</h2></div><span id="bodyweightLatest" class="pill">—</span></div><div class="bodyweight-row"><input id="bodyweightInput" type="number" step="0.1" placeholder="Enter bodyweight"><button id="saveBodyweight" class="btn secondary">Save</button></div><div id="bodyweightHistory" class="mini-history"></div></div>
+      <div class="card"><div class="section-head"><h2>Bench trend</h2><span class="muted small">Estimated 1RM</span></div><canvas id="dashboardChart" class="chart" width="720" height="240"></canvas></div>
+      <div class="card"><div class="section-head"><h2>Recent PRs</h2><button class="text-btn" data-go="progress">View all</button></div><div id="recentPrs"></div></div>
+    </section>
+
+    <section id="workoutView" class="view hidden">
+      <div class="workout-sticky">
+        <div><span id="activeWeek" class="eyebrow"></span><h2 id="activeWorkoutName">Workout</h2><p id="activeWorkoutMeta" class="muted small"></p></div>
+        <button id="abandonWorkout" class="text-btn danger-text">Exit</button>
+      </div>
+      <div id="activeExercises"></div>
+      <section class="other-workout-section">
+        <div class="card other-builder">
+          <div class="section-head"><div><span class="eyebrow">Optional</span><h2>Other exercises</h2></div><span class="pill">Customize</span></div>
+          <p class="muted small">Keep the prescribed workout above, then add anything else you want to train today.</p>
+          <div class="other-add-row"><select id="otherExerciseSelect" aria-label="Choose another exercise"></select><button id="addOtherExercise" class="btn secondary">Add exercise</button></div>
+          <p id="otherEmpty" class="muted small other-empty">No extra exercises added.</p>
+        </div>
+        <div id="otherExercises"></div>
+      </section>
+      <div class="card">
+        <label>Workout notes<textarea id="workoutNotes" rows="3" placeholder="Form, pain, energy, equipment substitutions…"></textarea></label>
+        <button id="finishWorkout" class="btn primary jumbo">Finish workout</button>
+      </div>
+    </section>
+
+    <section id="programView" class="view hidden">
+      <div class="card">
+        <span class="eyebrow">24-week plan</span><h2>Athletic Strength Program</h2>
+        <p class="muted">Three core days plus one optional upper-body day. Bench is trained twice weekly when the optional day is used.</p>
+        <div class="program-legend"><span><i class="dot chest"></i>Chest & tris</span><span><i class="dot back"></i>Back & bis</span><span><i class="dot legs"></i>Legs</span><span><i class="dot optional"></i>Optional upper</span></div>
+      </div>
+      <div id="programRoadmap"></div>
+      <div id="programPhase"></div>
+      <div id="programWeeks"></div>
+    </section>
+
+    <section id="exerciseView" class="view hidden">
+      <div class="card"><button id="exerciseBack" class="text-btn">← Back to progress</button><div class="section-head exercise-detail-head"><div><span class="eyebrow">Exercise detail</span><h2 id="exerciseDetailTitle">Exercise</h2></div><span id="exerciseDetailPr" class="pill">—</span></div><div id="exerciseDetailMetrics" class="metric-grid"></div><canvas id="exerciseDetailChart" class="chart" width="720" height="260"></canvas><div id="exerciseDetailRecommendation"></div><div id="exerciseDetailHistory"></div></div>
+    </section>
+
+    <section id="historyView" class="view hidden"><div class="card"><div class="section-head"><h2>Workout history</h2><span id="historyCount" class="pill"></span></div><div id="historyList"></div></div></section>
+
+    <section id="progressView" class="view hidden">
+      <div class="metric-grid" id="progressMetrics"></div>
+      <div class="card"><div class="section-head"><h2>Strength progress</h2><select id="progressExercise" class="compact-select"></select></div><canvas id="progressChart" class="chart" width="720" height="260"></canvas><div id="exerciseSummary"></div></div>
+      <div class="card"><div class="section-head"><h2>Weekly training volume</h2><span class="muted small">Last 8 weeks</span></div><canvas id="volumeChart" class="chart" width="720" height="260"></canvas></div>
+      <div class="card"><div class="section-head"><h2>Personal records</h2><span class="pill">All time</span></div><p class="muted small">Tap an exercise to open its full history.</p><div id="prList"></div></div>
+      <div class="card"><h2>Strength score</h2><p class="muted">A 0–100 consistency and performance score based on bench, squat, hinge, overhead press, pulling strength, and recent training adherence.</p><div id="strengthBreakdown"></div></div>
+    </section>
+
+    <section id="settingsView" class="view hidden">
+      <div class="card"><h2>Training settings</h2>
+        <div class="settings-grid">
+          <label>Default rest<select id="restSeconds"><option value="60">60 sec</option><option value="90">90 sec</option><option value="120">2 min</option><option value="180">3 min</option></select></label>
+          <label>Units<select id="units"><option value="lb">Pounds</option><option value="kg">Kilograms</option></select></label>
+          <label>Theme<select id="theme"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label>
+          <label>Program start<input id="programStartDate" type="date"></label>
+        </div>
+      </div>
+      <div class="card"><h2>Starting working weights</h2><p class="muted">These anchor program targets. Changes affect future sessions, not saved workouts.</p><div id="startingWeights"></div><button id="saveStartingWeights" class="btn primary">Save program settings</button></div>
+      <div class="card"><h2>Backup & data</h2><div class="button-stack"><button id="exportJson" class="btn secondary">Export full backup</button><button id="importJson" class="btn secondary">Import backup</button><button id="exportCsv" class="btn secondary">Export CSV</button><button id="clearData" class="btn danger">Delete all data</button></div><input id="importFile" class="hidden" type="file" accept="application/json"></div>
+      <div class="card"><h2>About</h2><p class="muted">Lift Log v5.0.0 · Local-first · Offline capable · No account required.</p></div>
+    </section>
+  </main>
+
+  <div id="restTimer" class="timer hidden"><div><span>REST</span><strong id="timerText">1:30</strong></div><button id="timerMinus">−15</button><button id="timerAdd">+30</button><button id="timerStop">Skip</button></div>
+  <div id="toast" class="toast hidden"></div>
+  <nav class="bottom-nav"><button class="nav-btn active" data-view="today"><span>⌂</span>Today</button><button class="nav-btn" data-view="program"><span>▦</span>Program</button><button class="nav-btn" data-view="history"><span>◷</span>History</button><button class="nav-btn" data-view="progress"><span>↗</span>Progress</button><button class="nav-btn" data-view="settings"><span>⚙</span>Settings</button></nav>
+</div>
+<script type="module" src="src/js/app.js"></script>
+</body>
+</html>

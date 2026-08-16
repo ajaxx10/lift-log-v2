@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>Workout Tracker</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent2: #1d4ed8;
+      --danger: #dc2626;
+      --border: #e5e7eb;
+      --success: #15803d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .app { max-width: 720px; margin: 0 auto; min-height: 100vh; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: #111827; color: white;
+      padding: 18px 16px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    }
+    header h1 { margin: 0; font-size: 1.35rem; }
+    header p { margin: 4px 0 0; color: #cbd5e1; font-size: .9rem; }
+    nav { display: flex; gap: 8px; margin-top: 14px; }
+    nav button {
+      flex: 1; border: 0; border-radius: 10px; padding: 10px 8px;
+      background: #374151; color: white; font-weight: 700;
+    }
+    nav button.active { background: var(--accent); }
+    main { padding: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .card h2, .card h3 { margin: 0 0 12px; }
+    label { display: block; font-size: .82rem; color: var(--muted); margin-bottom: 5px; font-weight: 700; }
+    input, select, textarea {
+      width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px;
+      font: inherit; background: white; color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #bfdbfe; border-color: var(--accent); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1.2fr .8fr .8fr; gap: 8px; }
+    .field { margin-bottom: 10px; }
+    button.primary, button.secondary, button.danger {
+      width: 100%; border: 0; border-radius: 11px; padding: 12px;
+      font: inherit; font-weight: 800; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: white; }
+    button.primary:active { background: var(--accent2); }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    button.danger { background: #fee2e2; color: var(--danger); }
+    .exercise {
+      border: 1px solid var(--border); border-radius: 13px; padding: 12px; margin: 10px 0;
+      background: #fafafa;
+    }
+    .exercise-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .exercise-head strong { font-size: 1rem; }
+    .small-btn {
+      width: auto; border: 0; background: transparent; color: var(--danger); font-weight: 800; padding: 4px 6px;
+    }
+    .set-row {
+      display: grid; grid-template-columns: 36px 1fr 1fr 42px; gap: 7px; align-items: center;
+      margin-top: 8px;
+    }
+    .set-num { text-align: center; font-weight: 800; color: var(--muted); }
+    .set-row input { padding: 10px 8px; text-align: center; }
+    .set-row button { border: 0; background: #fee2e2; color: var(--danger); border-radius: 9px; height: 40px; }
+    .exercise-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .exercise-actions button { padding: 9px; }
+    .history-item { border-bottom: 1px solid var(--border); padding: 12px 0; }
+    .history-item:last-child { border-bottom: 0; }
+    .history-top { display: flex; justify-content: space-between; gap: 10px; }
+    .history-date { color: var(--muted); font-size: .85rem; }
+    .history-exercises { margin-top: 8px; color: #374151; font-size: .92rem; line-height: 1.45; }
+    .pill { display: inline-block; background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 999px; font-size: .78rem; font-weight: 800; }
+    .empty { text-align: center; color: var(--muted); padding: 24px 8px; }
+    .hidden { display: none !important; }
+    .summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat { background: #eff6ff; border-radius: 12px; padding: 12px 8px; text-align: center; }
+    .stat b { display: block; font-size: 1.15rem; }
+    .stat span { font-size: .75rem; color: var(--muted); }
+    .footer-note { color: var(--muted); font-size: .78rem; text-align: center; padding: 8px 18px 22px; }
+    @media (max-width: 420px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-3 .field:first-child { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Workout Tracker</h1>
+    <p>Track exercises, sets, reps, and weight.</p>
+    <nav>
+      <button id="tabWorkout" class="active">Workout</button>
+      <button id="tabHistory">History</button>
+      <button id="tabProgress">Progress</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="workoutView">
+      <div class="card">
+        <div class="grid-2">
+          <div class="field">
+            <label for="workoutDate">Date</label>
+            <input id="workoutDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="workoutName">Workout name</label>
+            <input id="workoutName" placeholder="Upper Strength" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="workoutNotes">Notes</label>
+          <textarea id="workoutNotes" rows="2" placeholder="Energy, pain, form notes..."></textarea>
+        </div>
+      </div>
+
+      <div id="exerciseList"></div>
+
+      <div class="card">
+        <div class="grid-3">
+          <div class="field">
+            <label for="newExercise">Exercise</label>
+            <input id="newExercise" list="exerciseOptions" placeholder="Bench Press" />
+            <datalist id="exerciseOptions">
+              <option>Bench Press</option><option>Incline Dumbbell Press</option><option>Overhead Press</option>
+              <option>Close-Grip Bench Press</option><option>Squat</option><option>Deadlift</option>
+              <option>Romanian Deadlift</option><option>Barbell Row</option><option>Lat Pulldown</option>
+              <option>Pull-Up</option><option>Seated Cable Row</option><option>Bulgarian Split Squat</option>
+              <option>Leg Press</option><option>Hamstring Curl</option><option>Triceps Pushdown</option>
+              <option>Biceps Curl</option><option>Lateral Raise</option><option>Face Pull</option>
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="defaultWeight">Weight</label>
+            <input id="defaultWeight" type="number" min="0" step="2.5" placeholder="115" />
+          </div>
+          <div class="field">
+            <label for="defaultReps">Reps</label>
+            <input id="defaultReps" type="number" min="1" placeholder="10" />
+          </div>
+        </div>
+        <button id="addExercise" class="secondary">+ Add exercise</button>
+      </div>
+
+      <button id="saveWorkout" class="primary">Save workout</button>
+    </section>
+
+    <section id="historyView" class="hidden">
+      <div class="card">
+        <h2>Workout History</h2>
+        <div id="historyList"></div>
+      </div>
+      <button id="exportData" class="secondary">Export CSV</button>
+    </section>
+
+    <section id="progressView" class="hidden">
+      <div class="card">
+        <h2>Progress</h2>
+        <div class="field">
+          <label for="progressExercise">Exercise</label>
+          <select id="progressExercise"></select>
+        </div>
+        <div id="progressSummary" class="summary"></div>
+        <div id="progressList"></div>
+      </div>
+    </section>
+  </main>
+  <div class="footer-note">Your data stays in this browser using local storage.</div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'personalWorkoutTracker_v1';
+  let exercises = [];
+  let workouts = loadWorkouts();
+
+  const el = id => document.getElementById(id);
+  el('workoutDate').valueAsDate = new Date();
+
+  function loadWorkouts() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveWorkouts() { localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts)); }
+
+  function setTab(name) {
+    ['Workout','History','Progress'].forEach(tab => {
+      el('tab'+tab).classList.toggle('active', tab === name);
+      el(tab.toLowerCase()+'View').classList.toggle('hidden', tab !== name);
+    });
+    if (name === 'History') renderHistory();
+    if (name === 'Progress') renderProgressOptions();
+  }
+  el('tabWorkout').onclick = () => setTab('Workout');
+  el('tabHistory').onclick = () => setTab('History');
+  el('tabProgress').onclick = () => setTab('Progress');
+
+  el('addExercise').onclick = () => {
+    const name = el('newExercise').value.trim();
+    if (!name) return alert('Enter an exercise name.');
+    const weight = Number(el('defaultWeight').value || 0);
+    const reps = Number(el('defaultReps').value || 0);
+    exercises.push({ id: Date.now(), name, sets: [{ weight, reps }] });
+    el('newExercise').value = '';
+    renderExercises();
+  };
+
+  function renderExercises() {
+    const list = el('exerciseList');
+    list.innerHTML = '';
+    exercises.forEach((exercise, exIndex) => {
+      const card = document.createElement('div');
+      card.className = 'card exercise';
+      card.innerHTML = `
+        <div class="exercise-head">
+          <strong>${escapeHtml(exercise.name)}</strong>
+          <button class="small-btn" data-remove-exercise="${exIndex}">Remove</button>
+        </div>
+        <div style="display:grid;grid-template-columns:36px 1fr 1fr 42px;gap:7px;margin-top:10px;color:#6b7280;font-size:.72rem;font-weight:800;text-align:center">
+          <div>SET</div><div>WEIGHT</div><div>REPS</div><div></div>
+        </div>
+        <div class="sets"></div>
+        <div class="exercise-actions"><button class="secondary add-set" data-ex="${exIndex}">+ Add set</button></div>`;
+      const setsDiv = card.querySelector('.sets');
+      exercise.sets.forEach((set, setIndex) => {
+        const row = document.createElement('div');
+        row.className = 'set-row';
+        row.innerHTML = `
+          <div class="set-num">${setIndex + 1}</div>
+          <input type="number" min="0" step="2.5" value="${set.weight}" data-field="weight" data-ex="${exIndex}" data-set="${setIndex}" />
+          <input type="number" min="0" step="1" value="${set.reps}" data-field="reps" data-ex="${exIndex}" data-set="${setIndex}" />
+          <button data-remove-set="${setIndex}" data-ex="${exIndex}">×</button>`;
+        setsDiv.appendChild(row);
+      });
+      list.appendChild(card);
+    });
+
+    list.querySelectorAll('input[data-field]').forEach(input => {
+      input.oninput = e => {
+        const ex = Number(e.target.dataset.ex), set = Number(e.target.dataset.set);
+        exercises[ex].sets[set][e.target.dataset.field] = Number(e.target.value || 0);
+      };
+    });
+    list.querySelectorAll('.add-set').forEach(btn => btn.onclick = e => {
+      const ex = Number(e.target.dataset.ex);
+      const last = exercises[ex].sets.at(-1) || {weight:0,reps:0};
+      exercises[ex].sets.push({...last}); renderExercises();
+    });
+    list.querySelectorAll('[data-remove-set]').forEach(btn => btn.onclick = e => {
+      const ex = Number(e.target.dataset.ex), set = Number(e.target.dataset.removeSet);
+      exercises[ex].sets.splice(set,1); renderExercises();
+    });
+    list.querySelectorAll('[data-remove-exercise]').forEach(btn => btn.onclick = e => {
+      exercises.splice(Number(e.target.dataset.removeExercise),1); renderExercises();
+    });
+  }
+
+  el('saveWorkout').onclick = () => {
+    if (!exercises.length) return alert('Add at least one exercise.');
+    const workout = {
+      id: Date.now(),
+      date: el('workoutDate').value,
+      name: el('workoutName').value.trim() || 'Workout',
+      notes: el('workoutNotes').value.trim(),
+      exercises: JSON.parse(JSON.stringify(exercises))
+    };
+    workouts.unshift(workout); saveWorkouts();
+    exercises = []; renderExercises();
+    el('workoutName').value = ''; el('workoutNotes').value = '';
+    alert('Workout saved.');
+  };
+
+  function renderHistory() {
+    const list = el('historyList');
+    if (!workouts.length) { list.innerHTML = '<div class="empty">No workouts saved yet.</div>'; return; }
+    list.innerHTML = workouts.map(w => `
+      <div class="history-item">
+        <div class="history-top"><div><strong>${escapeHtml(w.name)}</strong><div class="history-date">${formatDate(w.date)}</div></div>
+        <button class="small-btn" onclick="deleteWorkout(${w.id})">Delete</button></div>
+        <div class="history-exercises">${w.exercises.map(ex => `<div><span class="pill">${escapeHtml(ex.name)}</span> ${ex.sets.map(s => `${s.weight} lb × ${s.reps}`).join(' · ')}</div>`).join('')}</div>
+        ${w.notes ? `<div class="history-date" style="margin-top:7px">${escapeHtml(w.notes)}</div>` : ''}
+      </div>`).join('');
+  }
+  window.deleteWorkout = id => {
+    if (!confirm('Delete this workout?')) return;
+    workouts = workouts.filter(w => w.id !== id); saveWorkouts(); renderHistory();
+  };
+
+  function renderProgressOptions() {
+    const names = [...new Set(workouts.flatMap(w => w.exercises.map(e => e.name)))].sort();
+    el('progressExercise').innerHTML = names.length ? names.map(n => `<option>${escapeHtml(n)}</option>`).join('') : '<option>No exercises yet</option>';
+    el('progressExercise').onchange = renderProgress;
+    renderProgress();
+  }
+  function renderProgress() {
+    const name = el('progressExercise').value;
+    const entries = [];
+    workouts.forEach(w => w.exercises.filter(e => e.name === name).forEach(e => {
+      const top = e.sets.reduce((best,s) => (s.weight > best.weight ? s : best), {weight:0,reps:0});
+      const volume = e.sets.reduce((sum,s) => sum + s.weight*s.reps,0);
+      const est1RM = top.reps > 0 ? Math.round(top.weight * (1 + top.reps/30)) : 0;
+      entries.push({date:w.date, top, volume, est1RM});
+    }));
+    entries.sort((a,b) => a.date.localeCompare(b.date));
+    const bestWeight = Math.max(0,...entries.map(e=>e.top.weight));
+    const bestVolume = Math.max(0,...entries.map(e=>e.volume));
+    const best1RM = Math.max(0,...entries.map(e=>e.est1RM));
+    el('progressSummary').innerHTML = `
+      <div class="stat"><b>${bestWeight}</b><span>Top weight</span></div>
+      <div class="stat"><b>${best1RM}</b><span>Est. 1RM</span></div>
+      <div class="stat"><b>${bestVolume}</b><span>Best volume</span></div>`;
+    el('progressList').innerHTML = entries.length ? entries.map(e => `
+      <div class="history-item"><div class="history-top"><strong>${formatDate(e.date)}</strong><span class="pill">Est. 1RM ${e.est1RM} lb</span></div>
+      <div class="history-exercises">Top set: ${e.top.weight} lb × ${e.top.reps} &nbsp;·&nbsp; Volume: ${e.volume} lb</div></div>`).join('') : '<div class="empty">No progress data yet.</div>';
+  }
+
+  el('exportData').onclick = () => {
+    const rows = [['Date','Workout','Exercise','Set','Weight','Reps','Notes']];
+    workouts.slice().reverse().forEach(w => w.exercises.forEach(ex => ex.sets.forEach((s,i) => rows.push([w.date,w.name,ex.name,i+1,s.weight,s.reps,w.notes]))));
+    const csv = rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='workout_history.csv'; a.click(); URL.revokeObjectURL(url);
+  };
+
+  function escapeHtml(s='') { return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function formatDate(d) { return d ? new Date(d+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}) : ''; }
+</script>
+</body>
+</html>
